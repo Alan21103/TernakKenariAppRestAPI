@@ -1,4 +1,8 @@
+import 'package:canary_app/presentation/auth/login_screen.dart';
+import 'package:canary_app/presentation/bloc/get_burung_tersedia_bloc.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
   const BuyerHomeScreen({super.key});
@@ -9,50 +13,56 @@ class BuyerHomeScreen extends StatefulWidget {
 
 
 class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
-   int _selectedIndex = 0;
+   @override 
+   void initState() {
+      super.initState();
+      context.read<GetBurungTersediaBloc>().add(GetAllBurungTersediaEvent());
+   }
 
-  @override
-  Widget build(BuildContext context) {
+   @override
+   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        title: const Text("Home Screen"),
+        centerTitle: true,
         backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Buyer Home',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black),
             onPressed: () {
-              // Handle logout
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return CupertinoAlertDialog(
+                    title: const Text("Konfirmasi"),
+                    content: const Text("Apakah Anda yakin ingin keluar?"),
+                    actions: [
+                      CupertinoDialogAction(
+                        child: const Text("Batal"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      CupertinoDialogAction(
+                        child: const Text("Keluar"),
+                        onPressed: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            height: 200,
-            color: Colors.grey[200],
-            child: const Center(
-              child: Text(
-                'Welcome to Buyer Home Screen!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ),
-        ]
-      )
     );
-  }
+   }
 }
