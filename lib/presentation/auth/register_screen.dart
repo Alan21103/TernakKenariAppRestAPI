@@ -144,6 +144,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     username: namaController.text,
                                     email: emailController.text,
                                     password: passwordController.text,
+                                    roleId: 2,
                                   );
                                   context.read<RegisterBloc>().add(
                                     RegisterRequested(requestModel: request),

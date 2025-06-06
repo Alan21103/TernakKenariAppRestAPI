@@ -1,3 +1,4 @@
+
 import 'package:canary_app/presentation/profile/bloc/profile_buyer_bloc.dart';
 import 'package:canary_app/presentation/profile/widget/profile_buyer_form.dart';
 import 'package:canary_app/presentation/profile/widget/profile_view_buyer.dart';
@@ -23,35 +24,36 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Profil Pembeli")),
-      body: BlocBuilder<ProfileBuyerBloc, ProfileBuyerState>(
-        builder: (context, state) {
-          print('[DEBUG] State sekarang: $state');
-
-          if (state is ProfileBuyerLoading) {
-            return Center(child: CircularProgressIndicator());
+      body: BlocListener<ProfileBuyerBloc, ProfileBuyerState>(
+        listener: (context, state) {
+          print("Current state: $state");
+          if (state is ProfileBuyerAdded) {
+            // Refresh profil setelah tambah
+            context.read<ProfileBuyerBloc>().add(GetProfileBuyerEvent());
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Profil berhasil ditambahkan")),
+            );
           }
-
-          if (state is ProfileBuyerLoaded) {
-            final profile = state.profile.data;
-            print('[DEBUG] Profile Loaded: ${profile.toJson()}');
-
-            // Cek nilai nama, mungkin kosong?
-            if (profile.name.trim().isEmpty) {
-              print('[DEBUG] Nama kosong, tampilkan form');
-              return ProfileBuyerInputForm();
+        },
+        child: BlocBuilder<ProfileBuyerBloc, ProfileBuyerState>(
+          builder: (context, state) {
+            if (state is ProfileBuyerLoading) {
+              return Center(child: CircularProgressIndicator());
             }
 
-            return ProfileViewBuyer(profile: profile);
-          }
-
-          if (state is ProfileBuyerError) {
-            print('[DEBUG] ERROR: ${state.message}');
-          }
-
-          // Kalau state ProfileBuyerInitial atau ProfileBuyerError
-          print('[DEBUG] State bukan loaded, tampilkan form');
-          return ProfileBuyerInputForm();
-        },
+            if (state is ProfileBuyerLoaded &&
+                state.profile.data?.name != null &&
+                state.profile.data!.name!.isNotEmpty) {
+                print("STATE LOADED: ${state.profile.data}");
+                print("NAMA: ${state.profile.data?.name}");
+              final profile = state.profile.data!;
+              return ProfileViewBuyer(profile: profile);
+            }
+          
+            // Default ke form jika tidak ada data atau error
+            return ProfileBuyerInputForm();
+          },
+        ),
       ),
     );
   }

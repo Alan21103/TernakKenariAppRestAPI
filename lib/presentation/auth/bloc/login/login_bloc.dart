@@ -1,7 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:canary_app/data/model/request/auth/login_request_model.dart';
 import 'package:canary_app/data/model/response/auth_response_model.dart';
-import 'package:canary_app/data/model/response/login_response_model.dart';
 import 'package:canary_app/data/repository/auth_repository.dart';
 
 part 'login_event.dart';
