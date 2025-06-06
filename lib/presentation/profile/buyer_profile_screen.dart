@@ -23,35 +23,35 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Profil Pembeli")),
-      body: BlocListener<ProfileBuyerBloc, ProfileBuyerState>(
-        listener: (context, state) {
-          if (state is ProfileBuyerAdded) {
-            // Refresh profil setelah tambah
-            context.read<ProfileBuyerBloc>().add(GetProfileBuyerEvent());
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Profil berhasil ditambahkan")),
-            );
+      body: BlocBuilder<ProfileBuyerBloc, ProfileBuyerState>(
+        builder: (context, state) {
+          print('[DEBUG] State sekarang: $state');
+
+          if (state is ProfileBuyerLoading) {
+            return Center(child: CircularProgressIndicator());
           }
+
+          if (state is ProfileBuyerLoaded) {
+            final profile = state.profile.data;
+            print('[DEBUG] Profile Loaded: ${profile.toJson()}');
+
+            // Cek nilai nama, mungkin kosong?
+            if (profile.name.trim().isEmpty) {
+              print('[DEBUG] Nama kosong, tampilkan form');
+              return ProfileBuyerInputForm();
+            }
+
+            return ProfileViewBuyer(profile: profile);
+          }
+
+          if (state is ProfileBuyerError) {
+            print('[DEBUG] ERROR: ${state.message}');
+          }
+
+          // Kalau state ProfileBuyerInitial atau ProfileBuyerError
+          print('[DEBUG] State bukan loaded, tampilkan form');
+          return ProfileBuyerInputForm();
         },
-        child: BlocBuilder<ProfileBuyerBloc, ProfileBuyerState>(
-          builder: (context, state) {
-            if (state is ProfileBuyerLoading) {
-              return Center(child: CircularProgressIndicator());
-            }
-
-            if (state is ProfileBuyerLoaded) {
-              print("Loaded profile: ${state.profile.data}");
-              print("Name: ${state.profile.data.name}");
-              if (state.profile.data.name.isNotEmpty) {
-                final profile = state.profile.data;
-                return ProfileViewBuyer(profile: profile);
-              }
-            }
-
-            // Default ke form jika tidak ada data atau error
-            return ProfileBuyerInputForm();
-          },
-        ),
       ),
     );
   }

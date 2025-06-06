@@ -3,48 +3,56 @@ import 'package:canary_app/data/model/request/buyer/buyer_profile_request_model.
 import 'package:canary_app/data/model/response/buyer/buyer_profile_response_model.dart';
 import 'package:canary_app/data/repository/profile_buyer_repository.dart';
 
-
 part 'profile_buyer_event.dart';
 part 'profile_buyer_state.dart';
 
 class ProfileBuyerBloc extends Bloc<ProfileBuyerEvent, ProfileBuyerState> {
   final ProfileBuyerRepository profileBuyerRepository;
   ProfileBuyerBloc({required this.profileBuyerRepository})
-      : super(ProfileBuyerInitial()) {
+    : super(ProfileBuyerInitial()) {
     on<AddProfileBuyerEvent>(_addProfileBuyer);
     on<GetProfileBuyerEvent>(_getProfileBuyer);
   }
 
   Future<void> _addProfileBuyer(
-  AddProfileBuyerEvent event,
-  Emitter<ProfileBuyerState> emit,
-) async {
-  print("EVENT ADD PROFILE DITERIMA");
-  emit(ProfileBuyerLoading());
-  final result = await profileBuyerRepository.addProfileBuyer(event.requestModel);
-  result.fold(
-    (error) {
-      print("ERROR ADD: $error");
-      emit(ProfileBuyerAddError(message: error));
-    },
-    (profile) {
-      print("BERHASIL ADD PROFILE");
-      emit(ProfileBuyerAdded(profile: profile));
-    },
-  );
-}
-
+    AddProfileBuyerEvent event,
+    Emitter<ProfileBuyerState> emit,
+  ) async {
+    print("EVENT ADD PROFILE DITERIMA");
+    emit(ProfileBuyerLoading());
+    final result = await profileBuyerRepository.addProfileBuyer(
+      event.requestModel,
+    );
+    result.fold(
+      (error) {
+        print("ERROR ADD: $error");
+        emit(ProfileBuyerAddError(message: error));
+      },
+      (profile) {
+        print("BERHASIL ADD PROFILE");
+        emit(ProfileBuyerAdded(profile: profile));
+      },
+    );
+  }
 
   Future<void> _getProfileBuyer(
     GetProfileBuyerEvent event,
     Emitter<ProfileBuyerState> emit,
   ) async {
+    print("[DEBUG] GetProfileBuyerEvent dipanggil");
+
     emit(ProfileBuyerLoading());
     final result = await profileBuyerRepository.getProfileBuyer();
 
     result.fold(
-      (error) => emit(ProfileBuyerError(message: error)),
-      (profile) => emit(ProfileBuyerLoaded(profile: profile)),
+      (error) {
+        print("[DEBUG] ERROR: $error");
+        emit(ProfileBuyerError(message: error));
+      },
+      (profile) {
+        print("[DEBUG] Profile berhasil diambil: ${profile.data.toJson()}");
+        emit(ProfileBuyerLoaded(profile: profile));
+      },
     );
   }
 }
