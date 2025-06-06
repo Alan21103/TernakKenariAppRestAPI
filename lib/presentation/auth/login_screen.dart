@@ -1,5 +1,15 @@
+import 'package:canary_app/core/components/custom_text_field.dart';
 import 'package:canary_app/core/components/spaces.dart';
+import 'package:canary_app/core/constants/colors.dart';
+import 'package:canary_app/core/core.dart';
+import 'package:canary_app/data/model/request/auth/login_request_model.dart';
+import 'package:canary_app/presentation/admin/admin_confirm_screen.dart';
+import 'package:canary_app/presentation/auth/bloc/login/login_bloc.dart';
+import 'package:canary_app/presentation/auth/register_screen.dart';
+import 'package:canary_app/presentation/profile/buyer_profile_screen.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-   return Scaffold(
+    return Scaffold(
       body: SingleChildScrollView(
         child: Form(
           key: _key,
@@ -49,11 +59,118 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ]
-            )
-          )
-        )
-      )
-   );
+                const SpaceHeight(30),
+                CustomTextField(
+                  validator: 'Email tidak boleh kosong',
+                  controller: emailController,
+                  label: 'Email',
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(Icons.email),
+                  ),
+                ),
+                const SpaceHeight(25),
+                CustomTextField(
+                  validator: 'Password tidak boleh kosong',
+                  controller: passwordController,
+                  label: 'Password',
+                  obscureText: !isShowPassword,
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(Icons.lock),
+                  ),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        isShowPassword = !isShowPassword;
+                      });
+                    },
+                    icon: Icon(
+                      isShowPassword ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.grey,
+                    ),
+                  ),
+                ),
+                const SpaceHeight(30),
+                BlocConsumer<LoginBloc, LoginState>(
+                  listener: (context, state) {
+                    if (state is LoginFailure) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(state.error)));
+                    } else if (state is LoginSuccess) {
+                      final role =
+                          state.responseModel.user?.role?.toLowerCase();
+                      print('[DEBUG] Role dari response: $role');
+                      print(
+                        '[DEBUG] Token: ${state.responseModel.user?.token}',
+                      );
+                      if (role == 'admin') {
+                        context.pushAndRemoveUntil(
+                          const AdminConfirmScreen(),
+                          (route) => false,
+                        );
+                      } else if (role == 'buyer') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.responseModel.message!)),
+                        );
+                        context.pushAndRemoveUntil(
+                          const BuyerProfileScreen(),
+                          (route) => false,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Role tidak dikenali')),
+                        );
+                      }
+                    }
+                  },
+                  builder: (context, state) {
+                    return Button.filled(
+                      onPressed:
+                          state is LoginLoading
+                              ? null
+                              : () {
+                                if (_key.currentState!.validate()) {
+                                  final request = LoginRequestModel(
+                                    email: emailController.text,
+                                    password: passwordController.text,
+                                  );
+                                  context.read<LoginBloc>().add(
+                                    LoginRequested(requestModel: request),
+                                  );
+                                }
+                              },
+                      label: state is LoginLoading ? 'Memuat...' : 'Masuk',
+                    );
+                  },
+                ),
+                const SpaceHeight(20),
+                Text.rich(
+                  TextSpan(
+                    text: 'Belum memiliki akun? Silahkan ',
+                    style: TextStyle(
+                      color: AppColors.grey,
+                      fontSize: MediaQuery.of(context).size.width * 0.03,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Daftar disini!',
+                        style: TextStyle(color: AppColors.primary),
+                        recognizer:
+                            TapGestureRecognizer()
+                              ..onTap = () {
+                                context.push(const RegisterScreen());
+                              },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
